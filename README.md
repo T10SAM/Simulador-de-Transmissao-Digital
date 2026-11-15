@@ -14,14 +14,23 @@ python -m pip install numpy matplotlib
 ## Arquitetura
 
 | Arquivo | Função |
+
 | `main.py` | Interface de terminal e orquestração da transmissão |
+
 | `dados.py` | Conversão ASCII e comparação de bits |
+
 | `codificacao.py` | Codificadores e decodificadores AMI e Manchester |
+
 | `modulacao.py` | Moduladores e demoduladores BPSK, QPSK e 16-QAM |
+
 | `canal.py` | AWGN, Rajadas e BER |
+
 | `canal_linha.py` | Normalização e ruído para sinais de linha |
+
 | `visualizacao.py` | Visualização da codificação, constelação e sinais ruidosos |
+
 | `experimentos.py` | Automação, estatísticas, gráficos e exportação CSV |
+
 | `validacao.py` | Testes independentes de modulação e canal ideal |
 
 ## Execução

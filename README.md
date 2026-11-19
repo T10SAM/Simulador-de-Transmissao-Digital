@@ -60,6 +60,17 @@ A execução de `experimentos.py` cria a pasta `resultados/` com:
 - `ber_vs_eficiencia.csv`: **48 linhas** (3 modulações × 2 canais × 8 valores de SNR; BER média, desvio-padrão e eficiência nominal).
 - `ber_linha_awgn.png`, `ber_linha_rajadas.png`, `ber_modulacao_awgn.png`, `ber_modulacao_rajadas.png`.
 
+## Gráficos
+
+![BER X SNR - LINHA - AWGN](./resultados/ber_linha_awgn.png)
+texto
+![BER X SNR - LINHA - RAJADAS](./resultados/ber_linha_rajadas.png)
+texto
+![BER X SNR - MODULAÇÃO - AWGN](./resultados/ber_modulacao_awgn.png)
+texto
+![BER X SNR - MODULAÇÃO - RAJADAS](./resultados/ber_linha_rajadas.png)
+texto
+
 ## Entrega e demonstração
 
 Link do Video: https://youtu.be/8PZ84JxSUT4

@@ -61,16 +61,20 @@ A execução de `experimentos.py` cria a pasta `resultados/` com:
 - `ber_linha_awgn.png`, `ber_linha_rajadas.png`, `ber_modulacao_awgn.png`, `ber_modulacao_rajadas.png`.
 
 ## Gráficos
+Os gráficos apresentam a relação entre a taxa de erro de bits (BER) e a relação sinal-ruído (SNR), comparando o desempenho das codificações de linha e das modulações digitais nos canais AWGN e com ruído em rajadas.
 
 ![BER X SNR - LINHA - AWGN](./resultados/ber_linha_awgn.png)
-texto
-![BER X SNR - LINHA - RAJADAS](./resultados/ber_linha_rajadas.png)
-texto
-![BER X SNR - MODULAÇÃO - AWGN](./resultados/ber_modulacao_awgn.png)
-texto
-![BER X SNR - MODULAÇÃO - RAJADAS](./resultados/ber_linha_rajadas.png)
-texto
+O aumento da SNR reduz a BER nas duas codificações. Manchester apresentou menor taxa de erro que AMI em todos os valores analisados, demonstrando maior robustez.
 
-## Entrega e demonstração
+![BER X SNR - LINHA - RAJADAS](./resultados/ber_linha_rajadas.png)
+O ruído em rajadas aumenta a BER em ambas as codificações. Manchester mantém melhor desempenho que AMI, mas as interferências concentradas provocam erros mesmo em valores mais elevados de SNR.
+
+![BER X SNR - MODULAÇÃO - AWGN](./resultados/ber_modulacao_awgn.png)
+BPSK apresentou a menor BER. Modulações com mais bits por símbolo possuem maior eficiência espectral, porém apresentam maior sensibilidade ao ruído para a mesma SNR.
+
+![BER X SNR - MODULAÇÃO - RAJADAS](./resultados/ber_modulacao_rajadas.png)
+O canal com rajadas apresentou taxas de erro superiores às do AWGN. BPSK manteve a maior robustez, enquanto o 16-QAM apresentou a maior BER, evidenciando o impacto das interferências intensas sobre modulações de ordem superior.
+
+## Vídeo
 
 Link do Video: https://youtu.be/8PZ84JxSUT4

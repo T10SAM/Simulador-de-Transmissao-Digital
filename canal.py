@@ -9,38 +9,95 @@ from modulacao import (
     demodular_16qam
 )
 
-# Adiciona ruido AWGN
-# snr_db: relacao Eb/N0 em decibeis
-# bits_por_simbolo: 1 para BPSK, 2 para QPSK e 4 para 16-QAM.
-def adicionar_awgn(simbolos, snr_db, bits_por_simbolo, rng=None):
-    if bits_por_simbolo <= 0:
-        raise ValueError("Quantidade de bits por simbolo invalida.")
+# Aplica AWGN com SNR por símbolo
+def adicionar_awgn(simbolos, snr_db, bits_por_simbolo=None, rng=None):
+    if rng is None: rng = np.random.default_rng()
 
+    simbolos = np.asarray(simbolos, dtype=complex)
+
+    if simbolos.size == 0: 
+        raise ValueError("A sequência de símbolos está vazia.")
+
+    potencia_sinal = np.mean(np.abs(simbolos) ** 2)
+
+    if potencia_sinal <= 0:
+        raise ValueError("A potência do sinal deve ser positiva.")
+
+    snr_linear = 10 ** (snr_db / 10)
+    potencia_ruido = potencia_sinal / snr_linear
+
+    # O ruído complexo possui duas componentes independentes:
+    # I (real) e Q (imaginária).
+    sigma = np.sqrt(potencia_ruido / 2)
+
+    ruido = sigma * (rng.normal(size=simbolos.size) + 1j * rng.normal(size=simbolos.size))
+
+    return simbolos + ruido
+
+
+# Aplica AWGN de fundo mais ruído adicional em rajadas.
+def adicionar_ruido_em_rajadas(
+    simbolos,
+    snr_db,
+    bits_por_simbolo=None,
+    rng=None,
+    probabilidade_rajada=0.01,
+    duracao_rajada=10,
+    fator_intensidade=5
+):
+    
     if rng is None:
         rng = np.random.default_rng()
 
-    # Conversao de dB para escala linear
+    simbolos = np.asarray(simbolos, dtype=complex)
+
+    if simbolos.size == 0:
+        raise ValueError("A sequência de símbolos está vazia.")
+
+    if not 0 <= probabilidade_rajada <= 1:
+        raise ValueError("Probabilidade de rajada inválida.")
+
+    if duracao_rajada < 1:
+        raise ValueError("Duração de rajada inválida.")
+
+    if fator_intensidade < 0:
+        raise ValueError("Fator de intensidade inválido.")
+
+    potencia_sinal = np.mean(np.abs(simbolos) ** 2)
+
+    if potencia_sinal <= 0:
+        raise ValueError("A potência do sinal deve ser positiva.")
+
     snr_linear = 10 ** (snr_db / 10)
+    potencia_ruido = potencia_sinal / snr_linear
+    sigma = np.sqrt(potencia_ruido / 2)
 
-    # Energia media por simbolo
-    energia_simbolo = np.mean(np.abs(simbolos) ** 2)
-
-    # Densidade espectral de ruido
-    N0 = energia_simbolo / (bits_por_simbolo * snr_linear)
-
-    # Desvio padrao de cada componente do ruido
-    sigma = np.sqrt(N0 / 2)
-
-    # Geracao do ruido gaussiano
+    # Ruído AWGN de fundo
     ruido = sigma * (
-        rng.normal(size=len(simbolos))
-        + 1j * rng.normal(size=len(simbolos))
+        rng.normal(size=simbolos.size)
+        + 1j * rng.normal(size=simbolos.size)
     )
 
-    # Soma do ruido ao sinal
-    sinal_recebido = simbolos + ruido
+    # Identificação dos intervalos com rajadas
+    mascara = np.zeros(simbolos.size, dtype=bool)
 
-    return sinal_recebido
+    inicios = np.where(
+        rng.random(simbolos.size) < probabilidade_rajada
+    )[0]
+
+    for inicio in inicios:
+        fim = min(inicio + duracao_rajada, simbolos.size)
+        mascara[inicio:fim] = True
+
+    # Ruído adicional durante as rajadas
+    ruido_extra = fator_intensidade * sigma * (
+        rng.normal(size=simbolos.size)
+        + 1j * rng.normal(size=simbolos.size)
+    )
+
+    ruido[mascara] += ruido_extra[mascara]
+
+    return simbolos + ruido, mascara
 
 
 # Calculo de BER
@@ -82,7 +139,7 @@ def plotar_comparacao(simbolos_originais, simbolos_recebidos, nome, snr_db):
     plt.axhline(0, linewidth=0.8)
     plt.axvline(0, linewidth=0.8)
 
-    plt.title(f"{nome} - Eb/N0 = {snr_db} dB")
+    plt.title(f"{nome} - SNR = {snr_db} dB")
     plt.xlabel("Eixo I")
     plt.ylabel("Eixo Q")
 
@@ -91,62 +148,6 @@ def plotar_comparacao(simbolos_originais, simbolos_recebidos, nome, snr_db):
     plt.axis("equal")
 
     plt.show()
-
-
-# Ruido em rajadas
-def adicionar_ruido_em_rajadas(
-    simbolos,
-    snr_db,
-    bits_por_simbolo,
-    rng=None,
-    probabilidade_rajada = 0.01, # Probabilidade de início de uma rajada em cada símbolo.
-    duracao_rajada = 10, # Quantidade de símbolos afetados por cada rajada.
-    fator_intensidade = 5 # Multiplicador da intensidade do ruído adicional.
-):
-
-    if rng is None:
-        rng = np.random.default_rng()
-
-    # Calcula a potência do ruído de fundo
-    snr_linear = 10 ** (snr_db / 10)
-
-    energia_simbolo = np.mean(np.abs(simbolos) ** 2)
-
-    N0 = energia_simbolo / (bits_por_simbolo * snr_linear)
-
-    sigma = np.sqrt(N0 / 2)
-
-    # Gera o ruído AWGN de fundo
-    ruido = sigma * (
-        rng.normal(size=len(simbolos))
-        + 1j * rng.normal(size=len(simbolos))
-    )
-
-    # Cria uma máscara para identificar as rajadas
-    mascara_rajadas = np.zeros(len(simbolos), dtype=bool)
-
-    inicios = np.where(
-        rng.random(len(simbolos)) < probabilidade_rajada
-    )[0]
-
-    # Marca os intervalos afetados
-    for inicio in inicios:
-        fim = min(inicio + duracao_rajada, len(simbolos))
-        mascara_rajadas[inicio:fim] = True
-
-    # Gera o ruído adicional das rajadas
-    ruido_adicional = fator_intensidade * sigma * (
-        rng.normal(size=len(simbolos))
-        + 1j * rng.normal(size=len(simbolos))
-    )
-
-    # Aplica o ruído adicional somente nas rajadas
-    ruido[mascara_rajadas] += ruido_adicional[mascara_rajadas]
-
-    # Produz o sinal recebido
-    sinal_recebido = simbolos + ruido
-
-    return sinal_recebido, mascara_rajadas
 
 
 if __name__ == "__main__":
@@ -201,9 +202,7 @@ if __name__ == "__main__":
     # Teste 16-QAM
     simbolos = modular_16qam(bits)
 
-    recebidos = adicionar_awgn(
-        simbolos, snr_db, 4, rng
-    )
+    recebidos = adicionar_awgn(simbolos, snr_db, 4, rng)
 
     bits_recuperados = demodular_16qam(recebidos)
 
@@ -215,13 +214,7 @@ if __name__ == "__main__":
     print("Erros:", erros)
     print("BER:", ber)
 
-    plotar_comparacao(
-        simbolos[:1000],
-        recebidos[:1000],
-        "16-QAM",
-        snr_db
-    )
-
+    plotar_comparacao(simbolos[:1000], recebidos[:1000], "16-QAM", snr_db)
 
     # Teste do canal com ruído em rajadas
     rng = np.random.default_rng(42)

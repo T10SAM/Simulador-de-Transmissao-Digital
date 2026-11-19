@@ -22,10 +22,7 @@ from modulacao import (
     demodular_16qam
 )
 
-# =====================================
 # CONFIGURAÇÕES
-# =====================================
-
 QUANTIDADE_BITS = 100000
 REPETICOES = 5
 VALORES_SNR = [0, 2, 4, 6, 8, 10, 12, 14]
@@ -52,24 +49,15 @@ MODULACOES = [
 
 CANAIS = ["AWGN", "Rajadas"]
 
-# =====================================
-# CANAL DE LINHA NORMALIZADO
-# =====================================
-
+# Canal de linha normalizado
 def decodificar_linha(sinal, nome):
     if nome == "AMI":
-        return decodificar_ami_ruidoso(
-            sinal,
-            limiar=np.sqrt(2) / 2
-        )
+        return decodificar_ami_ruidoso(sinal, limiar=np.sqrt(2) / 2)
 
     return decodificar_manchester_ruidoso(sinal)
 
 
-# =====================================
-# EXECUÇÃO DOS EXPERIMENTOS
-# =====================================
-
+# Execução dos Experimentos
 def executar_experimentos():
     registros = []
 
@@ -90,9 +78,7 @@ def executar_experimentos():
 
                     rng_bits = np.random.default_rng(semente_bits)
 
-                    bits = rng_bits.integers(
-                        0, 2, QUANTIDADE_BITS
-                    ).tolist()
+                    bits = rng_bits.integers(0, 2, QUANTIDADE_BITS).tolist()
 
                     if tipo == "Linha":
                             _, codificar, _ = metodo
@@ -118,7 +104,7 @@ def executar_experimentos():
                         if tipo == "Linha":
                             recebido, mascara = aplicar_canal_linha(
                                 sinal=sinal,
-                                eb_n0_db=snr,
+                                snr_db=snr,
                                 tipo_canal=canal.lower(),
                                 nome_codificacao=nome,
                                 rng=rng_ruido,
@@ -178,10 +164,7 @@ def executar_experimentos():
     return registros
 
 
-# =====================================
-# CÁLCULO DAS ESTATÍSTICAS
-# =====================================
-
+# Cálculo das Estatísticas
 def calcular_estatisticas(registros):
     estatisticas = []
 
@@ -192,7 +175,6 @@ def calcular_estatisticas(registros):
         )
 
         for metodo in metodos:
-
             nome = metodo[0]
 
             for canal in CANAIS:
@@ -219,31 +201,16 @@ def calcular_estatisticas(registros):
     return estatisticas
 
 
-# =====================================
-# EXPORTAÇÃO DOS RESULTADOS
-# =====================================
-
+# Exportação dos resultados
 def salvar_csv(caminho, registros):
-    with open(
-        caminho,
-        "w",
-        newline="",
-        encoding="utf-8"
-    ) as arquivo:
-        escritor = csv.DictWriter(
-            arquivo,
-            fieldnames=list(registros[0].keys())
-        )
+    with open(caminho, "w", newline="", encoding="utf-8") as arquivo:
+        escritor = csv.DictWriter(arquivo,fieldnames=list(registros[0].keys()))
         escritor.writeheader()
         escritor.writerows(registros)
 
-
-# =====================================
-# EFICIÊNCIA ESPECTRAL NOMINAL E COMPROMISSO BER
-# =====================================
-
+# Eficiência espectral nominal e compromisso BER
 def calcular_eficiencia_espectral():
-    """Valores nominais idealizados; não medem largura de banda efetiva."""
+    # Valores nominais idealizados; não medem largura de banda efetiva.
     return [
         {
             "modulacao": nome,
@@ -255,7 +222,7 @@ def calcular_eficiencia_espectral():
 
 
 def calcular_compromisso_ber_eficiencia(estatisticas):
-    """Associa a BER média/desvio de cada canal e Eb/N0 à eficiência nominal."""
+    # Associa a BER média/desvio de cada canal e SNR à eficiência nominal.
     eficiencia_por_modulacao = {
         item["modulacao"]: item
         for item in calcular_eficiencia_espectral()
@@ -265,7 +232,7 @@ def calcular_compromisso_ber_eficiencia(estatisticas):
         {
             "modulacao": registro["metodo"],
             "canal": registro["canal"],
-            "eb_n0_db": registro["snr_db"],
+            "snr_db": registro["snr_db"],
             "bits_por_simbolo": eficiencia_por_modulacao[registro["metodo"]]["bits_por_simbolo"],
             "eficiencia_espectral_bit_s_Hz": eficiencia_por_modulacao[registro["metodo"]]["eficiencia_espectral_bit_s_Hz"],
             "ber_media": registro["ber_media"],
@@ -276,21 +243,13 @@ def calcular_compromisso_ber_eficiencia(estatisticas):
     ]
 
 
-# =====================================
-# GRÁFICOS BER x Eb/N0
-# =====================================
-
+# Gráficos BER X SNR
 def gerar_grafico(estatisticas, tipo, canal):
-
     plt.figure(figsize=(10, 6))
 
-    metodos = (
-        CODIFICACOES if tipo == "Linha"
-        else MODULACOES
-    )
+    metodos = (CODIFICACOES if tipo == "Linha" else MODULACOES)
 
     for metodo in metodos:
-
         nome = metodo[0]
 
         dados = [
@@ -302,9 +261,7 @@ def gerar_grafico(estatisticas, tipo, canal):
 
         snrs = np.array([r["snr_db"] for r in dados])
         medias = np.array([r["ber_media"] for r in dados])
-        desvios = np.array([
-            r["desvio_padrao"] for r in dados
-        ])
+        desvios = np.array([r["desvio_padrao"] for r in dados])
 
         # BER zero não pode ser exibida em escala log.
         medias_plot = np.where(medias > 0, medias, np.nan)
@@ -319,8 +276,8 @@ def gerar_grafico(estatisticas, tipo, canal):
 
         plt.fill_between(snrs, inferiores, superiores, alpha=0.2)
 
-    plt.title(f"BER x Eb/N0 - {tipo} - {canal}")
-    plt.xlabel("Eb/N0 de referência (dB)")
+    plt.title(f"BER x SNR - {tipo} - {canal}")
+    plt.xlabel("SNR de referência (dB)")
     plt.ylabel("BER média")
 
     plt.grid(True, which="both", alpha=0.4)
@@ -333,10 +290,8 @@ def gerar_grafico(estatisticas, tipo, canal):
 
     plt.close()
 
-# =====================================
-# FUNÇÃO PRINCIPAL
-# =====================================
 
+# Função Principal
 def main():
 
     print("====================================")
@@ -347,25 +302,10 @@ def main():
 
     estatisticas = calcular_estatisticas(registros)
 
-    salvar_csv(
-        PASTA_RESULTADOS / "execucoes_detalhadas.csv",
-        registros
-    )
-
-    salvar_csv(
-        PASTA_RESULTADOS / "estatisticas.csv",
-        estatisticas
-    )
-
-    salvar_csv(
-        PASTA_RESULTADOS / "eficiencia_espectral.csv",
-        calcular_eficiencia_espectral()
-    )
-
-    salvar_csv(
-        PASTA_RESULTADOS / "ber_vs_eficiencia.csv",
-        calcular_compromisso_ber_eficiencia(estatisticas)
-    )
+    salvar_csv(PASTA_RESULTADOS / "execucoes_detalhadas.csv", registros)
+    salvar_csv(PASTA_RESULTADOS / "estatisticas.csv", estatisticas)
+    salvar_csv(PASTA_RESULTADOS / "eficiencia_espectral.csv", calcular_eficiencia_espectral())
+    salvar_csv(PASTA_RESULTADOS / "ber_vs_eficiencia.csv", calcular_compromisso_ber_eficiencia(estatisticas))
 
     for tipo in ["Linha", "Modulacao"]:
         for canal in CANAIS:

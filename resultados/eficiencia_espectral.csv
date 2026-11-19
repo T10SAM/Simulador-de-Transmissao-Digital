@@ -1,0 +1,4 @@
+modulacao,bits_por_simbolo,eficiencia_espectral_bit_s_Hz
+BPSK,1,1
+QPSK,2,2
+16-QAM,4,4

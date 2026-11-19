@@ -108,13 +108,13 @@ def executar_transmissao():
 
     if escolha_canal != "1":
         try:
-            snr_db = float(input("Digite Eb/N0 (dB): "))
+            snr_db = float(input("Digite SNR (dB): "))
         except ValueError:
-            print("Valor de Eb/N0 inválido.")
+            print("Valor de SNR inválido.")
             return
 
         if not np.isfinite(snr_db):
-            print("Eb/N0 deve ser um número finito.")
+            print("SNR deve ser um número finito.")
             return
 
     # Transmissor
@@ -169,7 +169,7 @@ def executar_transmissao():
     # Aplica o mesmo modelo dos experimentos
     sinal_linha_recebido, mascara_linha = aplicar_canal_linha(
         sinal=sinal_linha_normalizado,
-        eb_n0_db=snr_db if snr_db is not None else 0,
+        snr_db=snr_db if snr_db is not None else 0,
         tipo_canal=tipo_canal_linha,
         nome_codificacao=nome_codigo,
         rng=np.random.default_rng(),
@@ -197,7 +197,7 @@ def executar_transmissao():
     print(f"Canal: {nome_canal}")
 
     if snr_db is not None:
-        print(f"Eb/N0 de referência: {snr_db} dB")
+        print(f"SNR de referência: {snr_db} dB")
 
     print(f"\nMensagem enviada: {mensagem}")
     print(f"Mensagem recebida: {mensagem_recebida}")
@@ -249,3 +249,5 @@ if __name__ == "__main__":
         if continuar.strip().lower() != "s":
             print("\nSimulador encerrado.")
             break
+
+# Digite

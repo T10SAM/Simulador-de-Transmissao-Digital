@@ -31,7 +31,6 @@ python -m pip install numpy matplotlib
 
 | `experimentos.py` | Automação, estatísticas, gráficos e exportação CSV |
 
-| `validacao.py` | Testes independentes de modulação e canal ideal |
 
 ## Execução
 
@@ -41,7 +40,7 @@ python -m pip install numpy matplotlib
 python main.py
 ```
 
-Digite uma mensagem ASCII, selecione a codificação de linha (AMI ou Manchester), a modulação (BPSK, QPSK ou 16-QAM), o canal (ideal, AWGN ou rajadas) e, quando aplicável, o valor de Eb/N0 em dB. O programa vai mostar a mensagem recuperada, a BER e os gráficos.
+Digite uma mensagem ASCII, selecione a codificação de linha (AMI ou Manchester), a modulação (BPSK, QPSK ou 16-QAM), o canal (ideal, AWGN ou rajadas) e, quando aplicável, o valor de SNR em dB. O programa vai mostar a mensagem recuperada, a BER e os gráficos.
 
 **Experimentos automatizados**:
 
@@ -49,16 +48,16 @@ Digite uma mensagem ASCII, selecione a codificação de linha (AMI ou Manchester
 python experimentos.py
 ```
 
-O script vai executar 400 ensaios: 5 métodos (2 codificações de linha e 3 modulações) × 2 canais × 8 valores de Eb/N0 × 5 repetições. Sendo 100.000 bits por ensaio.
+O script vai executar 400 ensaios: 5 métodos (2 codificações de linha e 3 modulações) × 2 canais × 8 valores de SNR × 5 repetições. Sendo 100.000 bits por ensaio.
 
 ## Arquivos gerados
 
 A execução de `experimentos.py` cria a pasta `resultados/` com:
 
 - `execucoes_detalhadas.csv`: **400 linhas** (uma por ensaio).
-- `estatisticas.csv`: **80 linhas** (média e desvio-padrão por método/canal/Eb/N0).
+- `estatisticas.csv`: **80 linhas** (média e desvio-padrão por método/canal/SNR).
 - `eficiencia_espectral.csv`: **3 linhas** (modulação, bits por símbolo e eficiência nominal).
-- `ber_vs_eficiencia.csv`: **48 linhas** (3 modulações × 2 canais × 8 valores de Eb/N0; BER média, desvio-padrão e eficiência nominal).
+- `ber_vs_eficiencia.csv`: **48 linhas** (3 modulações × 2 canais × 8 valores de SNR; BER média, desvio-padrão e eficiência nominal).
 - `ber_linha_awgn.png`, `ber_linha_rajadas.png`, `ber_modulacao_awgn.png`, `ber_modulacao_rajadas.png`.
 
 ## Entrega e demonstração

@@ -26,7 +26,7 @@ def normalizar_sinal_linha(sinal, nome_codificacao):
 
 def aplicar_canal_linha(
     sinal,
-    eb_n0_db,
+    snr_db,
     tipo_canal,
     nome_codificacao,
     rng=None,
@@ -35,70 +35,72 @@ def aplicar_canal_linha(
     fator_intensidade=5
 ):
     """
-    Aplica canal ideal, AWGN ou AWGN com rajadas.
+    Aplica ruído em um sinal de linha.
 
-    eb_n0_db:
-        Relação Eb/N0 de referência, em dB.
+    SNR = potência média das amostras / variância do ruído.
 
-    duracao_rajada:
-        Duração de cada rajada em períodos de bit.
-
-    Retorna:
-        sinal_recebido, mascara_rajadas
+    As rajadas são definidas em períodos de bit.
     """
-
     if rng is None:
         rng = np.random.default_rng()
 
     sinal = np.asarray(sinal, dtype=float)
 
+    if sinal.size == 0:
+        raise ValueError("O sinal não pode estar vazio.")
+
     if nome_codificacao == "AMI":
         amostras_por_bit = 1
-        duracao_amostra = 1.0
-
     elif nome_codificacao == "Manchester":
         amostras_por_bit = 2
-        duracao_amostra = 0.5
-
     else:
-        raise ValueError("Codificação inválida")
+        raise ValueError("Codificação de linha inválida.")
 
-    if len(sinal) % amostras_por_bit != 0:
-        raise ValueError("Quantidade inválida de amostras")
+    if sinal.size % amostras_por_bit != 0:
+        raise ValueError("Quantidade inválida de amostras.")
+
+    mascara = np.zeros(sinal.size, dtype=bool)
 
     if tipo_canal == "ideal":
-        return sinal.copy(), np.zeros(len(sinal), dtype=bool)
+        return sinal.copy(), mascara
 
     if tipo_canal not in ("awgn", "rajadas"):
-        raise ValueError("Tipo de canal inválido")
+        raise ValueError("Tipo de canal inválido.")
 
-    eb_n0_linear = 10 ** (eb_n0_db / 10)
+    if not 0 <= probabilidade_rajada <= 1:
+        raise ValueError("Probabilidade de rajada inválida.")
 
-    # Energia por bit de referência
-    eb = 1.0
-    n0 = eb / eb_n0_linear
+    if duracao_rajada < 1:
+        raise ValueError("Duração de rajada inválida.")
 
-    sigma = np.sqrt(n0 / (2 * duracao_amostra))
+    if fator_intensidade < 0:
+        raise ValueError("Fator de intensidade inválido.")
 
+    # Potência média do sinal discreto
+    potencia_sinal = np.mean(sinal ** 2)
+
+    if potencia_sinal <= 0:
+        raise ValueError("A potência do sinal deve ser positiva.")
+
+    snr_linear = 10 ** (snr_db / 10)
+    potencia_ruido = potencia_sinal / snr_linear
+    sigma = np.sqrt(potencia_ruido)
+
+    # Ruído AWGN real
     ruido = rng.normal(
-        0,
-        sigma,
-        len(sinal)
+        loc=0,
+        scale=sigma,
+        size=sinal.size
     )
 
-    mascara = np.zeros(len(sinal), dtype=bool)
-
     if tipo_canal == "rajadas":
+        quantidade_bits = sinal.size // amostras_por_bit
 
-        quantidade_bits = len(sinal) // amostras_por_bit
-
-        # Decide os inícios das rajadas por período de bit
         inicios = np.where(
             rng.random(quantidade_bits) < probabilidade_rajada
         )[0]
 
         for inicio in inicios:
-
             fim = min(
                 inicio + duracao_rajada,
                 quantidade_bits
@@ -110,9 +112,9 @@ def aplicar_canal_linha(
             mascara[inicio_amostra:fim_amostra] = True
 
         ruido_extra = rng.normal(
-            0,
-            fator_intensidade * sigma,
-            len(sinal)
+            loc=0,
+            scale=fator_intensidade * sigma,
+            size=sinal.size
         )
 
         ruido[mascara] += ruido_extra[mascara]

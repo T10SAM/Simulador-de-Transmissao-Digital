@@ -62,4 +62,4 @@ A execução de `experimentos.py` cria a pasta `resultados/` com:
 
 ## Entrega e demonstração
 
-Link do Video: https://youtu.be/iY4rGPSS3Mk
+Link do Video: https://youtu.be/8PZ84JxSUT4
